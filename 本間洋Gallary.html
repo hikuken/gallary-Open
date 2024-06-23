@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本間洋ギャラリー</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #upload-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .gallery-item {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            width: 220px;
+        }
+        .gallery-item img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 3px;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+        }
+        .gif-title {
+            margin-top: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>本間洋ギャラリー</h1>
+    <div id="upload-container">
+        <input type="file" id="file-input" accept=".gif" multiple>
+        <button onclick="uploadFiles()">アップロード</button>
+    </div>
+    <div id="gallery"></div>
+
+    <script>
+        let galleryItems = [];
+
+        function saveGallery() {
+            localStorage.setItem('galleryItems', JSON.stringify(galleryItems));
+        }
+
+        function loadGallery() {
+            const savedItems = localStorage.getItem('galleryItems');
+            if (savedItems) {
+                galleryItems = JSON.parse(savedItems);
+                renderGallery();
+            }
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            galleryItems.forEach((item, index) => {
+                const galleryItem = createGalleryItem(item.src, item.title, index);
+                gallery.appendChild(galleryItem);
+            });
+        }
+
+        function createGalleryItem(src, title, index) {
+            const galleryItem = document.createElement('div');
+            galleryItem.className = 'gallery-item';
+            
+            const img = document.createElement('img');
+            img.src = src;
+            galleryItem.appendChild(img);
+            
+            const titleElement = document.createElement('div');
+            titleElement.className = 'gif-title';
+            titleElement.textContent = title;
+            galleryItem.appendChild(titleElement);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.onclick = function() {
+                galleryItems.splice(index, 1);
+                saveGallery();
+                renderGallery();
+            };
+            galleryItem.appendChild(deleteBtn);
+            
+            return galleryItem;
+        }
+
+        function uploadFiles() {
+            const input = document.getElementById('file-input');
+            
+            for (const file of input.files) {
+                if (file.type === 'image/gif') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const title = prompt(`「${file.name}」のタイトルを入力してください:`, file.name);
+                        galleryItems.push({ src: e.target.result, title: title || file.name });
+                        saveGallery();
+                        renderGallery();
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('GIF画像のみアップロードできます。');
+                }
+            }
+        }
+
+        // ページ読み込み時にギャラリーを復元
+        window.onload = loadGallery;
+    </script>
+</body>
+</html>
